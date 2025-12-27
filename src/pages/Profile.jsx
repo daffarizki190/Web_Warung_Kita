@@ -265,8 +265,9 @@ const Profile = () => {
         </div>
       </div>
 
-      {/* User Management */}
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 mt-6">
+      {/* User Management - Only for Admin */}
+      {user?.role === 'admin' && (
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 mt-6">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-3 bg-indigo-50 rounded-full text-indigo-600">
               <UserPlus className="w-6 h-6" />
@@ -347,6 +348,7 @@ const Profile = () => {
             </div>
           </div>
         </div>
+      )}
     </div>
   );
 };
