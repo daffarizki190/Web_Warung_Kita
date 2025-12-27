@@ -3,12 +3,16 @@ import StoreContext from './store';
 
 export const StoreProvider = ({ children }) => {
   const API_HOST = (() => {
-    const isDev = typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV;
-    if (!isDev) return '';
-    if (typeof window !== 'undefined' && window.location && window.location.hostname) {
-      return `http://${window.location.hostname}:5000`;
+    // If VITE_API_URL is set (e.g. in Vercel environment variables), use it.
+    if (import.meta.env.VITE_API_URL) {
+      return import.meta.env.VITE_API_URL;
     }
-    return 'http://localhost:5000';
+    // Development fallback
+    if (import.meta.env.DEV) {
+       return 'http://localhost:5000';
+    }
+    // If no VITE_API_URL and not DEV, assume same domain (relative path)
+    return '';
   })();
   const apiFetch = async (path, options = {}) => {
     const token = localStorage.getItem('wd_token');
