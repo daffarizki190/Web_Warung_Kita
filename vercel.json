@@ -6,7 +6,8 @@
   "functions": {
     "api/index.js": {
       "includeFiles": [
-        "server/schema.sql"
+        "server/schema.sql",
+        "server/db.js"
       ]
     }
   },
