@@ -32,13 +32,11 @@ const initDb = async () => {
     `);
     
     // Seed Users
-    const adminCheck = await db.query("SELECT * FROM users WHERE username = 'admin'");
-    const salt = await bcrypt.genSalt(10);
-    const hash = await bcrypt.hash('password123', salt);
+    const adminCheck = await db.query("SELECT 1 FROM users WHERE username = 'admin'");
     if (adminCheck.rows.length === 0) {
+      const salt = await bcrypt.genSalt(10);
+      const hash = await bcrypt.hash('password123', salt);
       await db.query("INSERT INTO users (username, password_hash, role) VALUES ($1, $2, $3)", ['admin', hash, 'admin']);
-    } else {
-      await db.query("UPDATE users SET password_hash=$1, role=$2 WHERE username='admin'", [hash, 'admin']);
     }
     const seeds = [
       { username: 'Mamah', password: 'mamah123', role: 'cashier' },

@@ -234,59 +234,6 @@ export const StoreProvider = ({ children }) => {
       localStorage.setItem('wd_token', res.token);
       localStorage.setItem('wd_user', JSON.stringify(res.user));
       setUser(res.user);
-      try {
-        const productsRes = await apiFetch('/products');
-        const normalizeCommodity = (name) => {
-          const lower = (name || '').toLowerCase();
-          const size = lower.includes('1/2kg') ? '1/2kg' : lower.includes('1/4kg') ? '1/4kg' : lower.includes('1kg') ? '1kg' : null;
-          if (!size) return null;
-          if (lower.includes('beras')) return `Beras ${size}`;
-          if (lower.includes('gula')) return `Gula ${size}`;
-          if (lower.includes('minyak')) return `Minyak Goreng ${size}`;
-          if (lower.includes('terigu')) return `Tepung Terigu ${size}`;
-          if (lower.includes('tapioka')) return `Tepung Tapioka ${size}`;
-          return null;
-        };
-        const temp = [];
-        for (const p of productsRes) {
-          const normalized = normalizeCommodity(p.name);
-          const base = {
-            id: p.id,
-            name: normalized || p.name,
-            category: p.category,
-            basePrice: Number(p.base_price) || 0,
-            sellingPrice: Number(p.selling_price) || 0,
-            stock: Number(p.stock) || 0,
-            image: ''
-          };
-          temp.push(base);
-        }
-        const grouped = new Map();
-        const others = [];
-        for (const item of temp) {
-          const isGeneric = (
-            item.name === 'Beras 1kg' || item.name === 'Beras 1/2kg' || item.name === 'Beras 1/4kg' ||
-            item.name === 'Gula 1kg' || item.name === 'Gula 1/2kg' || item.name === 'Gula 1/4kg' ||
-            item.name === 'Minyak Goreng 1kg' || item.name === 'Minyak Goreng 1/2kg' || item.name === 'Minyak Goreng 1/4kg' ||
-            item.name === 'Tepung Terigu 1kg' || item.name === 'Tepung Terigu 1/2kg' || item.name === 'Tepung Terigu 1/4kg' ||
-            item.name === 'Tepung Tapioka 1kg' || item.name === 'Tepung Tapioka 1/2kg' || item.name === 'Tepung Tapioka 1/4kg'
-          );
-          if (isGeneric) {
-            const key = item.name;
-            if (!grouped.has(key)) {
-              grouped.set(key, item);
-            } else {
-              const prev = grouped.get(key);
-              grouped.set(key, item.sellingPrice >= prev.sellingPrice ? item : prev);
-            }
-          } else {
-            others.push(item);
-          }
-        }
-        setProducts([...grouped.values(), ...others]);
-        const usersRes = await apiFetch('/users');
-        setServerUsers(usersRes);
-      } catch {}
       return true;
     } catch {
       const local = usersList.find(u => u.username === username && u.password === password);
