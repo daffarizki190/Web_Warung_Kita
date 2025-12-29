@@ -21,7 +21,14 @@ export const StoreProvider = ({ children }) => {
       ...(options.headers || {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {})
     };
-    const res = await fetch(`${API_HOST}/api${path}`, { ...options, headers });
+    const controller = new AbortController();
+    const timeoutMs = options.timeoutMs && Number(options.timeoutMs) > 0 ? Number(options.timeoutMs) : 0;
+    let timer = null;
+    if (timeoutMs) {
+      timer = setTimeout(() => controller.abort(), timeoutMs);
+    }
+    const res = await fetch(`${API_HOST}/api${path}`, { ...options, headers, signal: controller.signal });
+    if (timer) clearTimeout(timer);
     if (!res.ok) throw new Error(await res.text());
     return res.json();
   };
@@ -230,7 +237,7 @@ export const StoreProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
-      const res = await apiFetch('/login', { method: 'POST', body: JSON.stringify({ username, password }) });
+      const res = await apiFetch('/login', { method: 'POST', body: JSON.stringify({ username, password }), timeoutMs: 2000 });
       localStorage.setItem('wd_token', res.token);
       localStorage.setItem('wd_user', JSON.stringify(res.user));
       setUser(res.user);
