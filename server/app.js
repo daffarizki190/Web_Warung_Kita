@@ -19,6 +19,17 @@ app.use(express.json());
 const initDb = async () => {
   try {
     await db.query(schemaSql);
+    await db.query(`
+      DELETE FROM products 
+      WHERE category = 'Sembako' AND (
+        name ILIKE '%Ramos%' OR
+        name ILIKE '%Pandan Wangi%' OR
+        name ILIKE '%Bimoli%' OR
+        name ILIKE '%SunCo%' OR
+        name ILIKE '%Gulaku%' OR
+        name ILIKE '%Segitiga Biru%'
+      )
+    `);
     
     // Seed Users
     const adminCheck = await db.query("SELECT * FROM users WHERE username = 'admin'");

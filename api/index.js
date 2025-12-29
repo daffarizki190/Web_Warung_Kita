@@ -1,4 +1,5 @@
 import { app, initDb } from '../server/app.js';
+import serverless from 'serverless-http';
 
 let initialized = false;
 
@@ -11,5 +12,6 @@ export default async function handler(req, res) {
       console.error('Error during initDb in serverless:', err);
     }
   }
-  return app(req, res);
+  const wrapped = serverless(app);
+  return wrapped(req, res);
 }

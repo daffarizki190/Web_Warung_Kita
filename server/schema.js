@@ -64,15 +64,9 @@ WHERE NOT EXISTS (SELECT 1 FROM users WHERE username = 'admin');
 
 -- SEED DATA: Produk Warung Sembako
 -- Sembako
-INSERT INTO products (name, category, base_price, selling_price, stock) SELECT 'Beras Ramos 5kg', 'Sembako', 60000, 65000, 20 WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Beras Ramos 5kg');
-INSERT INTO products (name, category, base_price, selling_price, stock) SELECT 'Beras Pandan Wangi 5kg', 'Sembako', 70000, 75000, 15 WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Beras Pandan Wangi 5kg');
-INSERT INTO products (name, category, base_price, selling_price, stock) SELECT 'Minyak Goreng Bimoli 1L', 'Sembako', 18000, 20000, 24 WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Minyak Goreng Bimoli 1L');
-INSERT INTO products (name, category, base_price, selling_price, stock) SELECT 'Minyak Goreng SunCo 2L', 'Sembako', 38000, 42000, 12 WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Minyak Goreng SunCo 2L');
 INSERT INTO products (name, category, base_price, selling_price, stock) SELECT 'Minyak Goreng Curah 1kg', 'Sembako', 14000, 16000, 50 WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Minyak Goreng Curah 1kg');
-INSERT INTO products (name, category, base_price, selling_price, stock) SELECT 'Gula Pasir Gulaku 1kg', 'Sembako', 16000, 18000, 30 WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Gula Pasir Gulaku 1kg');
 INSERT INTO products (name, category, base_price, selling_price, stock) SELECT 'Gula Pasir Curah 1kg', 'Sembako', 15000, 17000, 50 WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Gula Pasir Curah 1kg');
 INSERT INTO products (name, category, base_price, selling_price, stock) SELECT 'Telur Ayam Negeri 1kg', 'Sembako', 28000, 30000, 30 WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Telur Ayam Negeri 1kg');
-INSERT INTO products (name, category, base_price, selling_price, stock) SELECT 'Tepung Terigu Segitiga Biru 1kg', 'Sembako', 12000, 14000, 20 WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Tepung Terigu Segitiga Biru 1kg');
 INSERT INTO products (name, category, base_price, selling_price, stock) SELECT 'Garam Halus 250g', 'Sembako', 2000, 3000, 50 WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Garam Halus 250g');
 
 -- Makanan Instan
