@@ -40,7 +40,7 @@ const Debt = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.customerName || !formData.amount || !formData.notes.trim()) return;
+    if (!formData.customerName || !formData.amount) return;
     
     await addDebt(formData);
     setFormData({ customerName: '', amount: '', notes: '' });
@@ -283,7 +283,6 @@ const Debt = () => {
               rows="3"
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              required
               className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
               placeholder="Tuliskan catatan (wajib)"
             />

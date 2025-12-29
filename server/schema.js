@@ -57,11 +57,6 @@ INSERT INTO store_profile (name, address, whatsapp)
 SELECT 'Warung Daffa', 'Jl. Contoh No. 123', '081234567890'
 WHERE NOT EXISTS (SELECT 1 FROM store_profile);
 
--- Default Admin User (password: password123)
-INSERT INTO users (username, password_hash, role)
-SELECT 'admin', '$2a$10$wS2/7w/7w/7w/7w/7w/7w/7w/7w/7w/7w/7w/7w/7w/7w/7w/7w', 'admin'
-WHERE NOT EXISTS (SELECT 1 FROM users WHERE username = 'admin');
-
 -- SEED DATA: Produk Warung Sembako
 -- Sembako
 INSERT INTO products (name, category, base_price, selling_price, stock) SELECT 'Minyak Goreng Curah 1kg', 'Sembako', 14000, 16000, 50 WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Minyak Goreng Curah 1kg');

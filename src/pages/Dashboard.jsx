@@ -2,21 +2,31 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingCart, Package, BookOpen, Settings } from 'lucide-react';
 
-const DashboardCard = ({ to, icon, title, description, color }) => (
-  <Link 
-    to={to}
-    className="group relative overflow-hidden bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border border-slate-100 flex flex-col items-center justify-center text-center gap-4 h-64"
-  >
-    <div className={`absolute inset-0 opacity-0 group-hover:opacity-5 transition-opacity duration-300 bg-${color}-500`} />
-    <div className={`p-4 rounded-2xl bg-${color}-50 text-${color}-600 group-hover:scale-110 transition-transform duration-300`}>
-      {icon}
-    </div>
-    <div>
-      <h3 className="text-xl font-bold text-slate-800 mb-1">{title}</h3>
-      <p className="text-sm text-slate-500">{description}</p>
-    </div>
-  </Link>
-);
+const colorStyles = {
+  indigo: { overlay: 'bg-indigo-500', box: 'bg-indigo-50 text-indigo-600' },
+  emerald: { overlay: 'bg-emerald-500', box: 'bg-emerald-50 text-emerald-600' },
+  amber: { overlay: 'bg-amber-500', box: 'bg-amber-50 text-amber-600' },
+  slate: { overlay: 'bg-slate-500', box: 'bg-slate-50 text-slate-600' },
+};
+
+const DashboardCard = ({ to, icon, title, description, color }) => {
+  const styles = colorStyles[color] || colorStyles.indigo;
+  return (
+    <Link 
+      to={to}
+      className="group relative overflow-hidden bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border border-slate-100 flex flex-col items-center justify-center text-center gap-4 h-64"
+    >
+      <div className={`absolute inset-0 opacity-0 group-hover:opacity-5 transition-opacity duration-300 ${styles.overlay}`} />
+      <div className={`p-4 rounded-2xl ${styles.box} group-hover:scale-110 transition-transform duration-300`}>
+        {icon}
+      </div>
+      <div>
+        <h3 className="text-xl font-bold text-slate-800 mb-1">{title}</h3>
+        <p className="text-sm text-slate-500">{description}</p>
+      </div>
+    </Link>
+  );
+};
 
 const Dashboard = () => {
   return (

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import StoreContext from './store';
+import { products as seedProducts } from '../../server/seedData.js';
 
 export const StoreProvider = ({ children }) => {
   const API_HOST = (() => {
@@ -14,7 +15,17 @@ export const StoreProvider = ({ children }) => {
     // If no VITE_API_URL and not DEV, assume same domain (relative path)
     return '';
   })();
+  const STATIC = !import.meta.env.VITE_API_URL;
+  const readJSON = (key, fallback) => {
+    try {
+      const v = localStorage.getItem(key);
+      return v ? JSON.parse(v) : fallback;
+    } catch {
+      return fallback;
+    }
+  };
   const apiFetch = async (path, options = {}) => {
+    if (STATIC) throw new Error('static_mode');
     const token = localStorage.getItem('wd_token');
     const headers = {
       'Content-Type': 'application/json',
@@ -52,39 +63,20 @@ export const StoreProvider = ({ children }) => {
   ];
 
   // --- STATE ---
-  const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem('wd_user');
-    return savedUser ? JSON.parse(savedUser) : null;
-  });
+  const [user, setUser] = useState(() => readJSON('wd_user', null));
 
-  const [products, setProducts] = useState(() => {
-    const saved = localStorage.getItem('wd_products');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [products, setProducts] = useState(() => readJSON('wd_products', []));
 
-  const [transactions, setTransactions] = useState(() => {
-    const saved = localStorage.getItem('wd_transactions');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [transactions, setTransactions] = useState(() => readJSON('wd_transactions', []));
 
-  const [debts, setDebts] = useState(() => {
-    const saved = localStorage.getItem('wd_debts');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [debts, setDebts] = useState(() => readJSON('wd_debts', []));
 
-  const [debtHistory, setDebtHistory] = useState(() => {
-    const saved = localStorage.getItem('wd_debt_history');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [debtHistory, setDebtHistory] = useState(() => readJSON('wd_debt_history', []));
 
-  const [profile, setProfile] = useState(() => {
-    const saved = localStorage.getItem('wd_profile');
-    return saved ? JSON.parse(saved) : INITIAL_PROFILE;
-  });
+  const [profile, setProfile] = useState(() => readJSON('wd_profile', INITIAL_PROFILE));
   
   const [usersList, setUsersList] = useState(() => {
-    const saved = localStorage.getItem('wd_users');
-    const base = saved ? JSON.parse(saved) : INITIAL_USERS;
+    const base = readJSON('wd_users', INITIAL_USERS);
     const existing = new Set(base.map(u => u.username));
     const toAdd = SEED_USERS
       .filter(u => !existing.has(u.username))
@@ -95,7 +87,7 @@ export const StoreProvider = ({ children }) => {
 
   // --- PERSISTENCE ---
   useEffect(() => {
-    localStorage.setItem('wd_products', JSON.stringify(products));
+    try { localStorage.setItem('wd_products', JSON.stringify(products)); } catch {}
   }, [products]);
 
   useEffect(() => {
@@ -118,28 +110,35 @@ export const StoreProvider = ({ children }) => {
   }, [transactions]);
 
   useEffect(() => {
-    localStorage.setItem('wd_debts', JSON.stringify(debts));
+    try { localStorage.setItem('wd_debts', JSON.stringify(debts)); } catch {}
   }, [debts]);
 
   useEffect(() => {
-    localStorage.setItem('wd_debt_history', JSON.stringify(debtHistory));
+    try { localStorage.setItem('wd_debt_history', JSON.stringify(debtHistory)); } catch {}
   }, [debtHistory]);
 
   useEffect(() => {
-    localStorage.setItem('wd_profile', JSON.stringify(profile));
+    try { localStorage.setItem('wd_profile', JSON.stringify(profile)); } catch {}
   }, [profile]);
 
   useEffect(() => {
-    localStorage.setItem('wd_users', JSON.stringify(usersList));
+    try { localStorage.setItem('wd_users', JSON.stringify(usersList)); } catch {}
   }, [usersList]);
 
   useEffect(() => {
     const token = localStorage.getItem('wd_token');
-    if (!token) return;
+    if (STATIC || !token) return;
     (async () => {
-      try {
-        const debtsRes = await apiFetch('/debts');
-        const mappedDebts = debtsRes.map(d => ({
+      const debtsP = apiFetch('/debts', { timeoutMs: 3000 });
+      const transP = apiFetch('/transactions', { timeoutMs: 3000 });
+      const productsP = apiFetch('/products', { timeoutMs: 5000 });
+      const profileP = apiFetch('/profile', { timeoutMs: 3000 });
+      const usersP = apiFetch('/users', { timeoutMs: 3000 });
+      const [debtsRes, transRes, productsRes, profRes, usersRes] = await Promise.allSettled([
+        debtsP, transP, productsP, profileP, usersP
+      ]);
+      if (debtsRes.status === 'fulfilled') {
+        const mappedDebts = debtsRes.value.map(d => ({
           id: d.id,
           transactionId: d.transaction_id,
           customerName: d.customer_name,
@@ -155,10 +154,9 @@ export const StoreProvider = ({ children }) => {
           notes: ''
         }));
         setDebts(mappedDebts);
-      } catch {}
-      try {
-        const transRes = await apiFetch('/transactions');
-        const mappedTrans = transRes.map(t => ({
+      }
+      if (transRes.status === 'fulfilled') {
+        const mappedTrans = transRes.value.map(t => ({
           id: t.id,
           date: t.created_at,
           items: (t.items || []).map(it => ({ id: it.product_id, name: it.name || '', qty: Number(it.qty) || 0, sellingPrice: Number(it.price_at_sale) || 0 })),
@@ -170,9 +168,8 @@ export const StoreProvider = ({ children }) => {
           createdBy: t.user_name || 'Unknown'
         }));
         setTransactions(mappedTrans);
-      } catch {}
-      try {
-        const productsRes = await apiFetch('/products');
+      }
+      if (productsRes.status === 'fulfilled') {
         const normalizeCommodity = (name) => {
           const lower = (name || '').toLowerCase();
           const size = lower.includes('1/2kg') ? '1/2kg' : lower.includes('1/4kg') ? '1/4kg' : lower.includes('1kg') ? '1kg' : null;
@@ -185,7 +182,7 @@ export const StoreProvider = ({ children }) => {
           return null;
         };
         const temp = [];
-        for (const p of productsRes) {
+        for (const p of productsRes.value) {
           const normalized = normalizeCommodity(p.name);
           const base = {
             id: p.id,
@@ -221,28 +218,56 @@ export const StoreProvider = ({ children }) => {
           }
         }
         setProducts([...grouped.values(), ...others]);
-      } catch {}
-      try {
-        const profRes = await apiFetch('/profile');
-        if (profRes) setProfile({ name: profRes.name, address: profRes.address, whatsapp: profRes.whatsapp });
-      } catch {}
-      try {
-        const usersRes = await apiFetch('/users');
-        setServerUsers(usersRes);
-      } catch {}
+      }
+      if (profRes.status === 'fulfilled' && profRes.value) {
+        setProfile({ name: profRes.value.name, address: profRes.value.address, whatsapp: profRes.value.whatsapp });
+      }
+      if (usersRes.status === 'fulfilled') {
+        setServerUsers(usersRes.value);
+      }
     })();
   }, [user]);
+
+  useEffect(() => {
+    if (!STATIC) return;
+    if (products && products.length > 0) return;
+    const seen = new Set();
+    const out = [];
+    for (const p of seedProducts) {
+      const name = (p.name || '').trim();
+      const key = name.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const slug = key.replace(/\s+/g, '-').replace(/\//g, '-');
+      out.push({
+        id: `${slug}_${out.length + 1}`,
+        name,
+        category: p.category,
+        basePrice: Number(p.basePrice) || 0,
+        sellingPrice: Number(p.sellingPrice) || 0,
+        stock: Number(p.stock) || 0,
+        image: '',
+        createdBy: 'Seed',
+        createdAt: new Date().toISOString()
+      });
+    }
+    setProducts(out);
+  }, []);
 
   // --- ACTIONS ---
 
   const login = async (username, password) => {
     try {
-      const res = await apiFetch('/login', { method: 'POST', body: JSON.stringify({ username, password }) });
-      localStorage.setItem('wd_token', res.token);
-      localStorage.setItem('wd_user', JSON.stringify(res.user));
-      setUser(res.user);
-      return true;
+      if (!STATIC) {
+        const res = await apiFetch('/login', { method: 'POST', body: JSON.stringify({ username, password }) });
+        localStorage.setItem('wd_token', res.token);
+        localStorage.setItem('wd_user', JSON.stringify(res.user));
+        setUser(res.user);
+        return true;
+      }
+      throw new Error('static_mode');
     } catch {
+      try { localStorage.removeItem('wd_token'); } catch {}
       const local = usersList.find(u => u.username === username && u.password === password);
       if (local) {
         const u = { id: local.id, username: local.username, role: local.role };
@@ -255,16 +280,16 @@ export const StoreProvider = ({ children }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem('wd_user');
+    try { localStorage.removeItem('wd_token'); } catch {}
+    try { localStorage.removeItem('wd_user'); } catch {}
     setUser(null);
   };
 
   const addProduct = async (product) => {
-    const autoImage = autoImageFor(product.name, product.category);
     const newProduct = { 
       ...product, 
       id: Date.now().toString(),
-      image: product.image && product.image.trim() ? product.image.trim() : autoImage,
+      image: '',
       createdBy: user?.username || 'Unknown',
       createdAt: new Date().toISOString()
     };
@@ -275,9 +300,7 @@ export const StoreProvider = ({ children }) => {
   const updateProduct = async (id, updatedProduct) => {
     setProducts(prev => prev.map(p => {
       if (p.id !== id) return p;
-      const image = updatedProduct.image !== undefined && updatedProduct.image !== ''
-        ? updatedProduct.image
-        : p.image || autoImageFor(p.name, p.category);
+      const image = '';
       return { ...p, ...updatedProduct, image, updatedBy: user?.username || 'Unknown', updatedAt: new Date().toISOString() };
     }));
     return true;
@@ -514,13 +537,7 @@ export const StoreProvider = ({ children }) => {
 
   // Migrate old Unsplash image URLs to Picsum once on mount
   useEffect(() => {
-    setProducts(prev => prev.map(p => {
-      if (p.image && p.image.includes('source.unsplash.com')) {
-        const seed = encodeURIComponent((p.name || 'produk').trim().replace(/\s+/g, '-'));
-        return { ...p, image: `https://picsum.photos/seed/${seed}/400/300` };
-      }
-      return p;
-    }));
+    setProducts(prev => prev.map(p => ({ ...p, image: '' })));
   }, []);
 
   return (
@@ -547,7 +564,45 @@ export const StoreProvider = ({ children }) => {
       updatePassword,
       registerUser,
       deleteUser,
-      clearDebtsWithPassword
+      clearDebtsWithPassword,
+      getExportData: () => JSON.stringify({
+        profile,
+        products,
+        transactions,
+        debts,
+        debtHistory,
+        usersList
+      }, null, 2),
+      importData: (obj) => {
+        try {
+          if (obj.profile) setProfile(obj.profile);
+          if (Array.isArray(obj.products)) {
+            const genId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+            const slugify = (s) => (s || '').toString().toLowerCase().trim().replace(/\s+/g, '-').replace(/[\\/]+/g, '-').replace(/[^a-z0-9_-]/g, '');
+            const seen = new Set();
+            const sanitized = [];
+            for (const p of obj.products) {
+              let id = (p.id || '').toString().trim();
+              if (!id) id = genId() + '_' + slugify(p.name);
+              id = id.replace(/[\\/]+/g, '-');
+              if (seen.has(id)) id = genId() + '_' + slugify(p.name);
+              seen.add(id);
+              const sellingPrice = Number(p.sellingPrice) || 0;
+              const basePrice = Number(p.basePrice) || 0;
+              const stock = Number(p.stock) || 0;
+              sanitized.push({ ...p, id, image: '', sellingPrice, basePrice, stock });
+            }
+            setProducts(sanitized);
+          }
+          if (Array.isArray(obj.transactions)) setTransactions(obj.transactions);
+          if (Array.isArray(obj.debts)) setDebts(obj.debts);
+          if (Array.isArray(obj.debtHistory)) setDebtHistory(obj.debtHistory);
+          if (Array.isArray(obj.usersList)) setUsersList(obj.usersList);
+          return true;
+        } catch {
+          return false;
+        }
+      }
     }}>
       {children}
     </StoreContext.Provider>

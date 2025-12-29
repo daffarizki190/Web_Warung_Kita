@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useStore } from '../context/store';
-import { Search, ShoppingCart, Trash2, Plus, Minus, CreditCard, User, Package } from 'lucide-react';
+import { Search, ShoppingCart, Trash2, Plus, Minus, CreditCard, User } from 'lucide-react';
 import Modal from '../components/Modal';
 
 const POS = () => {
@@ -236,13 +236,6 @@ const POS = () => {
 export default POS;
   const ProductCard = ({ product, onAdd }) => (
     <div className="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-      <div className="w-full aspect-[4/3] bg-slate-50 border-b border-slate-100 flex items-center justify-center">
-        {product.image ? (
-          <img src={product.image} alt={product.name} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = `https://placehold.co/400x300?text=${encodeURIComponent(product.name || 'Produk')}`; }} />
-        ) : (
-          <Package className="w-10 h-10 text-slate-300" />
-        )}
-      </div>
       <div className="p-3">
         <div className="flex items-start justify-between mb-2">
           <h4 className="font-bold text-slate-800 truncate mr-2">{product.name}</h4>
@@ -255,7 +248,6 @@ export default POS;
             <p className="text-xs text-slate-400">Harga</p>
             <p className="font-bold text-indigo-600">Rp {product.sellingPrice.toLocaleString()}</p>
           </div>
-          
         </div>
         <button
           onClick={() => onAdd(product)}

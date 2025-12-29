@@ -6,7 +6,7 @@ import Modal from '../components/Modal';
 const CATEGORIES = ['Sembako', 'Makanan Instan', 'Minuman', 'Bumbu Dapur', 'Perlengkapan', 'Snack', 'Rokok', 'Obat', 'Gas & Galon'];
 
 const Inventory = () => {
-  const { products, addProduct, updateProduct, deleteProduct } = useStore();
+  const { products, addProduct, updateProduct, deleteProduct, getExportData, importData } = useStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
@@ -76,13 +76,81 @@ const Inventory = () => {
           <h2 className="text-2xl font-bold text-slate-800">Barang</h2>
           <p className="text-slate-500">Kelola daftar barang Anda</p>
         </div>
-        <button
-          onClick={() => openModal()}
-          className="flex items-center justify-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl hover:bg-indigo-700 transition-colors"
-        >
-          <Plus className="w-5 h-5" />
-          <span>Tambah Barang</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              const data = getExportData();
+              const blob = new Blob([data], { type: 'application/json' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = 'warung-kita-data.json';
+              a.click();
+              URL.revokeObjectURL(url);
+            }}
+            className="px-3 py-2 bg-slate-800 text-white rounded-xl hover:bg-slate-900 transition-colors"
+          >
+            Ekspor Data
+          </button>
+          <label className="px-3 py-2 bg-slate-100 text-slate-800 rounded-xl hover:bg-slate-200 transition-colors cursor-pointer">
+            Impor Data
+            <input
+              type="file"
+              accept=".json,.csv"
+              className="hidden"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                const text = await file.text();
+                try {
+                  const isCsv = file.name.toLowerCase().endsWith('.csv') || (file.type && file.type.includes('csv'));
+                  if (isCsv) {
+                    const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+                    if (lines.length > 0) {
+                      const header = lines[0].split(',').map(h => h.trim().toLowerCase());
+                      const idx = (n) => header.indexOf(n);
+                      const parseRow = (row) => {
+                        const cells = row.match(/("([^"]|"")*"|[^,]+)/g) || [];
+                        const get = (n) => {
+                          const j = idx(n);
+                          if (j === -1) return '';
+                          let v = (cells[j] || '').trim();
+                          if (v.startsWith('"') && v.endsWith('"')) v = v.slice(1, -1).replace(/""/g, '"');
+                          return v;
+                        };
+                        const name = get('name');
+                        if (!name) return null;
+                        const category = get('category') || 'Sembako';
+                        const sellingPrice = Number(get('sellingprice') || get('selling_price') || get('harga') || 0);
+                        const basePrice = Number(get('baseprice') || get('base_price') || 0);
+                        const stock = Number(get('stock') || 0);
+                        return { name, category, sellingPrice, basePrice, stock, image: '' };
+                      };
+                      const items = [];
+                      for (let i = 1; i < lines.length; i++) {
+                        const row = lines[i];
+                        const obj = parseRow(row);
+                        if (obj) items.push(obj);
+                      }
+                      importData({ products: items });
+                    }
+                  } else {
+                    const obj = JSON.parse(text);
+                    importData(obj);
+                  }
+                } catch {}
+                e.target.value = '';
+              }}
+            />
+          </label>
+          <button
+            onClick={() => openModal()}
+            className="flex items-center justify-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl hover:bg-indigo-700 transition-colors"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Tambah Barang</span>
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4">
@@ -133,13 +201,7 @@ const Inventory = () => {
                   </button>
                 </div>
               </div>
-              <div className="w-full aspect-[4/3] bg-slate-50 border border-slate-100 rounded-xl mb-3 flex items-center justify-center">
-                {product.image ? (
-                  <img src={product.image} alt={product.name} className="w-full h-full object-cover rounded-xl" onError={(e) => { e.currentTarget.src = `https://placehold.co/400x300?text=${encodeURIComponent(product.name || 'Produk')}`; }} />
-                ) : (
-                  <Package className="w-10 h-10 text-slate-300" />
-                )}
-              </div>
+              <div className="mb-2" />
               {product.createdBy && (
                 <p className="text-[11px] text-slate-400 mb-2">Diinput oleh: <span className="font-medium text-slate-600">{product.createdBy}</span></p>
               )}
