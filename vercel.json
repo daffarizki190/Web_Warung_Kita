@@ -1,9 +1,4 @@
 {
-  "functions": {
-    "api/index.js": {
-      "includeFiles": "server/schema.sql"
-    }
-  },
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/index.js" },
     { "source": "/(.*)", "destination": "/index.html" }

@@ -3,7 +3,7 @@ import { useStore } from '../context/store';
 import { Plus, Search, Edit2, Trash2, Package } from 'lucide-react';
 import Modal from '../components/Modal';
 
-const CATEGORIES = ['Sembako', 'Jajanan', 'Minuman', 'Rokok', 'Obat', 'Lainnya'];
+const CATEGORIES = ['Sembako', 'Makanan Instan', 'Minuman', 'Bumbu Dapur', 'Perlengkapan', 'Snack', 'Rokok', 'Obat', 'Gas & Galon'];
 
 const Inventory = () => {
   const { products, addProduct, updateProduct, deleteProduct } = useStore();
@@ -16,7 +16,6 @@ const Inventory = () => {
     name: '',
     category: CATEGORIES[0],
     sellingPrice: '',
-    stock: '',
     image: ''
   });
 
@@ -194,17 +193,6 @@ const Inventory = () => {
               min="0"
               value={formData.sellingPrice}
               onChange={e => setFormData({ ...formData, sellingPrice: e.target.value })}
-              className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Stok</label>
-            <input
-              type="number"
-              required
-              min="0"
-              value={formData.stock}
-              onChange={e => setFormData({ ...formData, stock: e.target.value })}
               className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
