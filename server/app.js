@@ -4,14 +4,10 @@ import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import * as db from './db.js';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { schemaSql } from './schema.js';
+import { products as seedProducts } from './seedData.js';
 
 dotenv.config();
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const app = express();
 const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_key_123';
@@ -22,9 +18,9 @@ app.use(express.json());
 // Initialize Database Schema
 const initDb = async () => {
   try {
-    const schemaSql = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
     await db.query(schemaSql);
     
+    // Seed Users
     const adminCheck = await db.query("SELECT * FROM users WHERE username = 'admin'");
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash('password123', salt);
@@ -47,6 +43,19 @@ const initDb = async () => {
         await db.query('INSERT INTO users (username, password_hash, role) VALUES ($1, $2, $3)', [s.username, shash, s.role]);
       }
     }
+
+    // Seed Products (Robust JS-based seeding)
+    for (const p of seedProducts) {
+      const exists = await db.query('SELECT 1 FROM products WHERE name=$1', [p.name]);
+      if (exists.rows.length === 0) {
+        await db.query(
+          'INSERT INTO products (name, category, base_price, selling_price, stock) VALUES ($1, $2, $3, $4, $5)',
+          [p.name, p.category, p.basePrice, p.sellingPrice, p.stock]
+        );
+      }
+    }
+    console.log('Database initialized and seeded successfully.');
+
   } catch (err) {
     console.error('Error initializing database:', err);
   }

@@ -1,3 +1,4 @@
+export const schemaSql = \`
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
   username VARCHAR(50) UNIQUE NOT NULL,
@@ -57,7 +58,6 @@ SELECT 'Warung Daffa', 'Jl. Contoh No. 123', '081234567890'
 WHERE NOT EXISTS (SELECT 1 FROM store_profile);
 
 -- Default Admin User (password: password123)
--- Hash generated for 'password123'
 INSERT INTO users (username, password_hash, role)
 SELECT 'admin', '$2a$10$wS2/7w/7w/7w/7w/7w/7w/7w/7w/7w/7w/7w/7w/7w/7w/7w/7w', 'admin'
 WHERE NOT EXISTS (SELECT 1 FROM users WHERE username = 'admin');
@@ -140,3 +140,4 @@ INSERT INTO products (name, category, base_price, selling_price, stock) SELECT '
 INSERT INTO products (name, category, base_price, selling_price, stock) SELECT 'Obat Paramex (Tablet)', 'Obat', 2000, 2500, 50 WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Obat Paramex (Tablet)');
 INSERT INTO products (name, category, base_price, selling_price, stock) SELECT 'Tolak Angin Sachet', 'Obat', 3500, 4500, 50 WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Tolak Angin Sachet');
 INSERT INTO products (name, category, base_price, selling_price, stock) SELECT 'Minyak Kayu Putih Cap Lang 60ml', 'Obat', 20000, 23000, 20 WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Minyak Kayu Putih Cap Lang 60ml');
+\`;
