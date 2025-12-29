@@ -19,17 +19,6 @@ app.use(express.json());
 const initDb = async () => {
   try {
     await db.query(schemaSql);
-    await db.query(`
-      DELETE FROM products 
-      WHERE category = 'Sembako' AND (
-        name ILIKE '%Ramos%' OR
-        name ILIKE '%Pandan Wangi%' OR
-        name ILIKE '%Bimoli%' OR
-        name ILIKE '%SunCo%' OR
-        name ILIKE '%Gulaku%' OR
-        name ILIKE '%Segitiga Biru%'
-      )
-    `);
     
     // Seed Users
     const adminCheck = await db.query("SELECT 1 FROM users WHERE username = 'admin'");
@@ -53,10 +42,21 @@ const initDb = async () => {
       }
     }
 
-    // Seed Products (Robust JS-based seeding)
-    for (const p of seedProducts) {
-      const exists = await db.query('SELECT 1 FROM products WHERE name=$1', [p.name]);
-      if (exists.rows.length === 0) {
+    const countRes = await db.query('SELECT COUNT(*)::int AS c FROM products');
+    const hasProducts = (countRes.rows[0]?.c || 0) > 0;
+    if (!hasProducts) {
+      await db.query(`
+        DELETE FROM products 
+        WHERE category = 'Sembako' AND (
+          name ILIKE '%Ramos%' OR
+          name ILIKE '%Pandan Wangi%' OR
+          name ILIKE '%Bimoli%' OR
+          name ILIKE '%SunCo%' OR
+          name ILIKE '%Gulaku%' OR
+          name ILIKE '%Segitiga Biru%'
+        )
+      `);
+      for (const p of seedProducts) {
         await db.query(
           'INSERT INTO products (name, category, base_price, selling_price, stock) VALUES ($1, $2, $3, $4, $5)',
           [p.name, p.category, p.basePrice, p.sellingPrice, p.stock]
