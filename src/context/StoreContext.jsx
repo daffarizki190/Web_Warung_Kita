@@ -237,7 +237,7 @@ export const StoreProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
-      const res = await apiFetch('/login', { method: 'POST', body: JSON.stringify({ username, password }), timeoutMs: 2000 });
+      const res = await apiFetch('/login', { method: 'POST', body: JSON.stringify({ username, password }) });
       localStorage.setItem('wd_token', res.token);
       localStorage.setItem('wd_user', JSON.stringify(res.user));
       setUser(res.user);
