@@ -1,6 +1,8 @@
-const { Pool } = require('pg');
-const { newDb } = require('pg-mem');
-require('dotenv').config();
+import pg from 'pg';
+const { Pool } = pg;
+import { newDb } from 'pg-mem';
+import dotenv from 'dotenv';
+dotenv.config();
 
 let pool = null;
 let memPool = null;
@@ -23,17 +25,17 @@ const ensureMemPool = () => {
   return memPool;
 };
 
-module.exports = {
-  query: async (text, params) => {
-    if (!useMem && pool) {
-      try {
-        return await pool.query(text, params);
-      } catch {
-        useMem = true;
-      }
+export const query = async (text, params) => {
+  if (!useMem && pool) {
+    try {
+      return await pool.query(text, params);
+    } catch {
+      useMem = true;
     }
-    const mp = ensureMemPool();
-    return mp.query(text, params);
-  },
-  pool,
+  }
+  const mp = ensureMemPool();
+  return mp.query(text, params);
 };
+
+export { pool };
+export default { query, pool };

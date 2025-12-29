@@ -1,13 +1,17 @@
-const express = require('express');
-const cors = require('cors');
-const dotenv = require('dotenv');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const db = require('./db');
-const fs = require('fs');
-const path = require('path');
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import * as db from './db.js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_key_123';
@@ -270,5 +274,4 @@ app.put('/api/account/password', authenticateToken, async (req, res) => {
   }
 });
 
-module.exports = { app, initDb };
-
+export { app, initDb };

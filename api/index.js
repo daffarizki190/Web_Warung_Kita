@@ -1,6 +1,5 @@
-import appModule from '../server/app.js';
+import { app, initDb } from '../server/app.js';
 
-const { app, initDb } = appModule;
 let initialized = false;
 
 export default async function handler(req, res) {
